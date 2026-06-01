@@ -1,40 +1,32 @@
 {
   "name": "wats1",
   "version": "1.0.0",
-  "description": "<p align=\"center\">\r   <img src=\"apps/admin/public/logo.png\" alt=\"MultiWA Logo\" width=\"80\" />\r </p>",
+  "description": "WhatsApp Lightweight Web App",
   "main": "app.js",
-  "dependencies": {
-    "@hapi/hoek": "^11.0.7",
-    "@whiskeysockets/baileys": "^7.0.0-rc13",
-    "baileys": "^7.0.0-rc13",
-    "bcryptjs": "^3.0.3",
-    "cookie-parser": "^1.4.7",
-    "ejs": "^6.0.1",
-    "eslint": "^8.57.1",
-    "eslint-config-riot": "^1.0.0",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-scope": "^7.2.2",
-    "eslint-visitor-keys": "^3.4.3",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "libsignal": "github:WhiskeySockets/libsignal-node",
-    "libsignal-node": "github:WhiskeySockets/libsignal-node",
-    "otplib": "^13.2.1",
-    "pino": "^10.3.1",
-    "prettier": "^3.8.1",
-    "protobufjs": "^8.5.0",
-    "qrcode": "^1.5.4",
-    "qrcode-terminal": "^0.12.0",
-    "socket.io": "^4.8.3",
-    "sqlite3": "^6.0.1",
-    "turbo": "^2.8.2",
-    "typescript": "^5.9.3"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "dependencies": {
+    "@hapi/hoek": "^11.0.4",
+    "@whiskeysockets/baileys": "^6.7.9",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "libsignal-node": "github:WhiskeySockets/libsignal-node",
+    "pino": "^9.5.0",
+    "protobufjs": "^7.4.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
 }
