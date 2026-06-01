@@ -1,100 +1,209 @@
-<% locals.adminTab = 'overview'; locals.pageTitle = 'نظرة عامة'; %>
+<% locals.adminTab = 'overview'; locals.pageTitle = 'لوحة الإدارة'; %>
 <%- include('../partials/admin_sidebar') %>
 
-<!-- Stats -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase mb-1">المستخدمون</p>
-        <h3 class="text-4xl font-black text-slate-900 dark:text-white"><%= usersCount %></h3>
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <p class="text-xs font-bold text-slate-400 uppercase mb-2">المستخدمون</p>
+        <p class="text-4xl font-black text-slate-900 dark:text-white"><%= stats.users %></p>
     </div>
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase mb-1">أجهزة متصلة</p>
-        <h3 class="text-4xl font-black text-whatsapp"><%= connectedDevices %></h3>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <p class="text-xs font-bold text-slate-400 uppercase mb-2">أجهزة متصلة</p>
+        <p class="text-4xl font-black text-[#118C7E]"><%= stats.connected %></p>
     </div>
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase mb-1">الحملات</p>
-        <h3 class="text-4xl font-black text-slate-900 dark:text-white"><%= campaigns.length %></h3>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <p class="text-xs font-bold text-slate-400 uppercase mb-2">الحملات</p>
+        <p class="text-4xl font-black text-slate-900 dark:text-white"><%= stats.campaigns %></p>
     </div>
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase mb-1">إجمالي الأجهزة</p>
-        <h3 class="text-4xl font-black text-slate-900 dark:text-white"><%= devices.length %></h3>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <p class="text-xs font-bold text-slate-400 uppercase mb-2">الرسائل المرسلة</p>
+        <p class="text-4xl font-black text-slate-900 dark:text-white"><%= stats.messages %></p>
     </div>
 </div>
 
-<!-- Recent Users -->
-<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
-    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <h2 class="font-black text-lg">أحدث المستخدمين</h2>
-        <a href="/admin/users" class="text-sm text-whatsapp font-bold hover:underline">عرض الكل</a>
-    </div>
+<!-- Add User Button -->
+<div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-black">المستخدمون (<%= users.length %>)</h2>
+    <button onclick="document.getElementById('addUserModal').classList.remove('hidden')"
+        class="flex items-center gap-2 px-5 py-2.5 bg-[#118C7E] hover:bg-[#25D366] text-white text-sm font-black rounded-xl shadow-lg shadow-emerald-500/20 transition">
+        <i class="fa-solid fa-user-plus"></i> إضافة مستخدم
+    </button>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm mb-6">
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
+            <thead class="bg-slate-50 dark:bg-slate-800/60 text-right">
                 <tr>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">#</th>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">المستخدم</th>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">البريد</th>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">الباقة</th>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">الدور</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs uppercase">المستخدم</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs uppercase">الباقة</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs uppercase">الأجهزة</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs uppercase">الرسائل</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs uppercase">الحالة</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs uppercase">الإجراءات</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <% users.slice(0,5).forEach(u => { %>
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                    <td class="px-6 py-4 text-slate-400"><%= u.id %></td>
-                    <td class="px-6 py-4 font-bold"><%= u.username %></td>
-                    <td class="px-6 py-4 text-slate-500"><%= u.email %></td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold"><%= u.plan_name || 'Starter' %></span></td>
-                    <td class="px-6 py-4">
-                        <% if(u.role === 'admin') { %>
-                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">مدير</span>
-                        <% } else { %>
-                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">مستخدم</span>
-                        <% } %>
+                <% users.forEach(u => { %>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 <%= u.role==='admin' ? 'bg-red-100 text-red-600' : 'bg-[#118C7E]/10 text-[#118C7E]' %>">
+                                <%= (u.username || u.email || u.phone || 'U').charAt(0).toUpperCase() %>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 dark:text-white"><%= u.username || u.email || u.phone %></p>
+                                <p class="text-xs text-slate-400"><%= u.email || u.phone || 'بدون بريد' %></p>
+                            </div>
+                        </div>
                     </td>
-                </tr>
-                <% }) %>
-                <% if(users.length === 0) { %>
-                <tr><td colspan="5" class="text-center py-8 text-slate-400">لا يوجد مستخدمون بعد</td></tr>
-                <% } %>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Recent Devices -->
-<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <h2 class="font-black text-lg">أحدث الأجهزة</h2>
-        <a href="/admin/devices" class="text-sm text-whatsapp font-bold hover:underline">عرض الكل</a>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
-                <tr>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">اسم الجهاز</th>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">رقم الجوال</th>
-                    <th class="text-right px-6 py-3 font-bold text-slate-500">الحالة</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <% devices.slice(0,5).forEach(d => { %>
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                    <td class="px-6 py-4 font-bold"><%= d.name %></td>
-                    <td class="px-6 py-4 text-slate-500"><%= d.phone_number || '—' %></td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-lg text-xs font-bold <%= d.status === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' %>">
-                            <%= d.status === 'connected' ? 'متصل' : 'مفصول' %>
+                    <td class="px-5 py-4">
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700"><%= u.plan_name %></span>
+                    </td>
+                    <td class="px-5 py-4 text-slate-600 dark:text-slate-300 font-bold"><%= u.device_count %></td>
+                    <td class="px-5 py-4 text-slate-600 dark:text-slate-300 font-bold"><%= u.msg_count %></td>
+                    <td class="px-5 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-bold <%= u.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' %>">
+                            <%= u.is_active ? '● نشط' : '○ موقوف' %>
                         </span>
                     </td>
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-1.5">
+                            <% if(u.role !== 'admin') { %>
+                            <a href="/admin/user/<%= u.id %>"
+                                class="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 hover:bg-blue-100 transition" title="عرض التفاصيل">
+                                <i class="fa-solid fa-eye text-xs"></i>
+                            </a>
+                            <button onclick="openEditModal(<%= u.id %>, '<%= u.plan_id %>', <%= u.is_active %>, '<%= u.role %>')"
+                                class="p-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-600 hover:bg-amber-100 transition" title="تعديل">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteUser(<%= u.id %>)"
+                                class="p-2 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 transition" title="حذف">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                            <% } else { %>
+                            <span class="text-xs text-slate-400 px-2 py-1">مدير النظام</span>
+                            <% } %>
+                        </div>
+                    </td>
                 </tr>
                 <% }) %>
-                <% if(devices.length === 0) { %>
-                <tr><td colspan="3" class="text-center py-8 text-slate-400">لا توجد أجهزة بعد</td></tr>
+                <% if(!users.length) { %>
+                <tr><td colspan="6" class="text-center py-12 text-slate-400">لا يوجد مستخدمون</td></tr>
                 <% } %>
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-7 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700">
+        <h3 class="text-xl font-black mb-5">إضافة مستخدم جديد</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold mb-1.5 text-slate-600 dark:text-slate-400">المعرّف (بريد / اسم / جوال)</label>
+                <input type="text" id="newIdentifier" placeholder="مثال: user@domain.com أو اسم أو 966xxxxxxx"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1.5 text-slate-600 dark:text-slate-400">كلمة المرور</label>
+                <input type="text" id="newPassword" placeholder="كلمة مرور آمنة"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1.5 text-slate-600 dark:text-slate-400">الباقة</label>
+                <select id="newPlan" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+                    <% plans.forEach(p => { %><option value="<%= p.id %>"><%= p.name %></option><% }) %>
+                </select>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button onclick="document.getElementById('addUserModal').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm">إلغاء</button>
+            <button onclick="createUser()" class="flex-1 py-2.5 rounded-xl bg-[#118C7E] text-white font-bold text-sm hover:bg-[#25D366] transition">إنشاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-7 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700">
+        <h3 class="text-xl font-black mb-5">تعديل المستخدم</h3>
+        <input type="hidden" id="editUserId">
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold mb-1.5 text-slate-600 dark:text-slate-400">كلمة المرور الجديدة (اتركها فارغة لعدم التغيير)</label>
+                <input type="text" id="editPassword" placeholder="اتركها فارغة للإبقاء على الحالية"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1.5 text-slate-600 dark:text-slate-400">الباقة</label>
+                <select id="editPlan" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+                    <% plans.forEach(p => { %><option value="<%= p.id %>"><%= p.name %></option><% }) %>
+                </select>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="editActive" class="w-4 h-4 rounded accent-[#118C7E]">
+                    <span class="text-sm font-bold">الحساب نشط</span>
+                </label>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button onclick="document.getElementById('editUserModal').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm">إلغاء</button>
+            <button onclick="saveEdit()" class="flex-1 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-600 transition">حفظ التعديلات</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function createUser() {
+    const identifier = document.getElementById('newIdentifier').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+    const planId = document.getElementById('newPlan').value;
+    if (!identifier || !password) return Swal.fire({ icon: 'warning', text: 'أدخل المعرّف وكلمة المرور', confirmButtonColor: '#118C7E' });
+    const res = await fetch('/api/admin/users', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password, planId })
+    });
+    const data = await res.json();
+    if (res.ok) { Swal.fire({ icon: 'success', text: 'تم إنشاء المستخدم.', confirmButtonColor: '#118C7E' }).then(() => location.reload()); }
+    else Swal.fire({ icon: 'error', text: data.error, confirmButtonColor: '#118C7E' });
+}
+
+function openEditModal(id, planId, isActive, role) {
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editPlan').value = planId;
+    document.getElementById('editActive').checked = !!isActive;
+    document.getElementById('editPassword').value = '';
+    document.getElementById('editUserModal').classList.remove('hidden');
+}
+
+async function saveEdit() {
+    const id = document.getElementById('editUserId').value;
+    const password = document.getElementById('editPassword').value.trim();
+    const plan_id = document.getElementById('editPlan').value;
+    const is_active = document.getElementById('editActive').checked;
+    const body = { plan_id, is_active };
+    if (password) body.password = password;
+    const res = await fetch('/api/admin/users/' + id, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (res.ok) { Swal.fire({ icon: 'success', text: 'تم التحديث.', confirmButtonColor: '#118C7E' }).then(() => location.reload()); }
+    else Swal.fire({ icon: 'error', text: data.error, confirmButtonColor: '#118C7E' });
+}
+
+async function deleteUser(id) {
+    const r = await Swal.fire({ title: 'حذف المستخدم؟', text: 'سيُحذف مع جميع بياناته نهائياً.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonText: 'إلغاء', confirmButtonText: 'نعم، احذف' });
+    if (!r.isConfirmed) return;
+    const res = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+    const data = await res.json();
+    if (res.ok) location.reload();
+    else Swal.fire({ icon: 'error', text: data.error, confirmButtonColor: '#118C7E' });
+}
+</script>
 
 <%- include('../partials/admin_footer') %>

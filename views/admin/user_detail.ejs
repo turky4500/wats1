@@ -1,0 +1,256 @@
+<% locals.adminTab = 'users'; locals.pageTitle = 'تفاصيل المستخدم: ' + (targetUser.username || targetUser.email || targetUser.phone); %>
+<%- include('../partials/admin_sidebar') %>
+
+<!-- Back -->
+<div class="mb-5">
+    <a href="/admin" class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#118C7E] transition">
+        <i class="fa-solid fa-arrow-right"></i> العودة للقائمة
+    </a>
+</div>
+
+<!-- User Header Card -->
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+        <div class="w-16 h-16 rounded-2xl bg-[#118C7E]/10 flex items-center justify-center text-3xl font-black text-[#118C7E] shrink-0">
+            <%= (targetUser.username || targetUser.email || targetUser.phone || 'U').charAt(0).toUpperCase() %>
+        </div>
+        <div class="flex-1">
+            <h2 class="text-2xl font-black text-slate-900 dark:text-white">
+                <%= targetUser.username || targetUser.email || targetUser.phone %>
+            </h2>
+            <div class="flex flex-wrap gap-3 mt-2 text-sm text-slate-500">
+                <% if(targetUser.email) { %><span><i class="fa-solid fa-envelope ml-1"></i><%= targetUser.email %></span><% } %>
+                <% if(targetUser.phone) { %><span><i class="fa-solid fa-phone ml-1"></i><%= targetUser.phone %></span><% } %>
+                <span><i class="fa-solid fa-calendar ml-1"></i><%= new Date(targetUser.created_at).toLocaleDateString('ar-SA') %></span>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700"><%= targetUser.plan_name %></span>
+            <span class="px-3 py-1.5 rounded-full text-sm font-bold <%= targetUser.is_active ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-600' %>">
+                <%= targetUser.is_active ? 'نشط' : 'موقوف' %>
+            </span>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex flex-wrap gap-2 mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
+        <button onclick="openPasswordModal()" class="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm font-bold rounded-xl hover:bg-amber-100 transition">
+            <i class="fa-solid fa-key text-xs"></i> تغيير كلمة المرور
+        </button>
+        <button onclick="toggleStatus(<%= targetUser.id %>, <%= targetUser.is_active %>)"
+            class="flex items-center gap-2 px-4 py-2 <%= targetUser.is_active ? 'bg-red-50 dark:bg-red-500/10 text-red-600' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600' %> text-sm font-bold rounded-xl hover:opacity-80 transition">
+            <i class="fa-solid fa-<%= targetUser.is_active ? 'ban' : 'check-circle' %> text-xs"></i>
+            <%= targetUser.is_active ? 'إيقاف الحساب' : 'تفعيل الحساب' %>
+        </button>
+        <select id="changePlan" onchange="changePlan(<%= targetUser.id %>)" class="px-4 py-2 bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 text-sm font-bold rounded-xl border-0 outline-none cursor-pointer">
+            <option disabled selected>تغيير الباقة</option>
+            <% plans.forEach(p => { %><option value="<%= p.id %>" <%= targetUser.plan_id==p.id?'selected':'' %>><%= p.name %></option><% }) %>
+        </select>
+        <button onclick="deleteUser(<%= targetUser.id %>)" class="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-500/10 text-red-600 text-sm font-bold rounded-xl hover:bg-red-100 transition">
+            <i class="fa-solid fa-trash text-xs"></i> حذف الحساب
+        </button>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center">
+        <p class="text-2xl font-black text-slate-900 dark:text-white"><%= devices.length %></p>
+        <p class="text-xs text-slate-400 mt-1">أجهزة</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center">
+        <p class="text-2xl font-black text-[#118C7E]"><%= contactsCount %></p>
+        <p class="text-xs text-slate-400 mt-1">جهة اتصال</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center">
+        <p class="text-2xl font-black text-slate-900 dark:text-white"><%= campaigns.length %></p>
+        <p class="text-xs text-slate-400 mt-1">حملة</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center">
+        <p class="text-2xl font-black text-slate-900 dark:text-white"><%= archive.length %></p>
+        <p class="text-xs text-slate-400 mt-1">رسالة مرسلة</p>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="flex gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 w-fit">
+    <button onclick="showTab('devices')" id="tab-devices" class="tab-btn active px-4 py-2 rounded-lg text-sm font-bold transition">الأجهزة</button>
+    <button onclick="showTab('campaigns')" id="tab-campaigns" class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition">الحملات</button>
+    <button onclick="showTab('archive')" id="tab-archive" class="tab-btn px-4 py-2 rounded-lg text-sm font-bold transition">أرشيف الرسائل</button>
+</div>
+
+<!-- Devices Tab -->
+<div id="pane-devices" class="tab-pane bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <% if(!devices.length) { %>
+    <p class="text-center py-10 text-slate-400">لا توجد أجهزة</p>
+    <% } else { %>
+    <table class="w-full text-sm">
+        <thead class="bg-slate-50 dark:bg-slate-800/60 text-right">
+            <tr>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">الجهاز</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">الرقم</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">الحالة</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">تاريخ الإضافة</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            <% devices.forEach(d => { %>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                <td class="px-5 py-3.5 font-bold"><%= d.name %></td>
+                <td class="px-5 py-3.5 text-slate-500 font-mono text-xs"><%= d.phone_number || '—' %></td>
+                <td class="px-5 py-3.5">
+                    <span class="px-2 py-1 rounded-lg text-xs font-bold <%= d.status==='connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' %>">
+                        <%= d.status==='connected' ? '● متصل' : '○ مفصول' %>
+                    </span>
+                </td>
+                <td class="px-5 py-3.5 text-slate-400 text-xs"><%= new Date(d.created_at).toLocaleDateString('ar-SA') %></td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } %>
+</div>
+
+<!-- Campaigns Tab -->
+<div id="pane-campaigns" class="tab-pane hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <% if(!campaigns.length) { %>
+    <p class="text-center py-10 text-slate-400">لا توجد حملات</p>
+    <% } else { %>
+    <table class="w-full text-sm">
+        <thead class="bg-slate-50 dark:bg-slate-800/60 text-right">
+            <tr>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">اسم الحملة</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">المرسَل</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">الفاشل</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">الحالة</th>
+                <th class="px-5 py-3 font-bold text-slate-500 text-xs">التاريخ</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            <% campaigns.forEach(c => { %>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                <td class="px-5 py-3.5 font-bold"><%= c.name %></td>
+                <td class="px-5 py-3.5 text-emerald-600 font-bold"><%= c.sent_count %></td>
+                <td class="px-5 py-3.5 text-red-500 font-bold"><%= c.failed_count %></td>
+                <td class="px-5 py-3.5">
+                    <span class="px-2 py-1 rounded-lg text-xs font-bold <%= c.status==='completed' ? 'bg-emerald-100 text-emerald-700' : c.status==='processing' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-600' %>">
+                        <%= c.status==='completed' ? 'مكتملة' : c.status==='processing' ? 'جارية' : 'فاشلة' %>
+                    </span>
+                </td>
+                <td class="px-5 py-3.5 text-slate-400 text-xs"><%= new Date(c.created_at).toLocaleDateString('ar-SA') %></td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    <% } %>
+</div>
+
+<!-- Archive Tab -->
+<div id="pane-archive" class="tab-pane hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <% if(!archive.length) { %>
+    <p class="text-center py-10 text-slate-400">لا توجد رسائل في الأرشيف</p>
+    <% } else { %>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/60 text-right">
+                <tr>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs">المستقبل</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs">الرسالة</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs">النوع</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs">الحالة</th>
+                    <th class="px-5 py-3 font-bold text-slate-500 text-xs">الوقت</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <% archive.forEach(m => { %>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <td class="px-5 py-3.5">
+                        <p class="font-bold"><%= m.recipient_name || '—' %></p>
+                        <p class="text-xs text-slate-400 font-mono"><%= m.recipient_phone %></p>
+                    </td>
+                    <td class="px-5 py-3.5 max-w-xs">
+                        <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2"><%= m.message_content %></p>
+                    </td>
+                    <td class="px-5 py-3.5">
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold <%= m.type==='campaign' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' %>">
+                            <%= m.type==='campaign' ? 'حملة' : 'رد تلقائي' %>
+                        </span>
+                    </td>
+                    <td class="px-5 py-3.5">
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold <%= m.status==='sent' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' %>">
+                            <%= m.status==='sent' ? '✓ مرسلة' : '✕ فاشلة' %>
+                        </span>
+                    </td>
+                    <td class="px-5 py-3.5 text-slate-400 text-xs"><%= new Date(m.sent_at).toLocaleString('ar-SA') %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <% } %>
+</div>
+
+<!-- Password Modal -->
+<div id="passwordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-7 w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-700">
+        <h3 class="text-xl font-black mb-5">تغيير كلمة المرور</h3>
+        <input type="text" id="newPass" placeholder="كلمة المرور الجديدة"
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm mb-4">
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('passwordModal').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm">إلغاء</button>
+            <button onclick="changePassword()" class="flex-1 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-600 transition">تغيير</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.tab-btn { color: #64748b; }
+.tab-btn.active { background: white; color: #118C7E; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.dark .tab-btn.active { background: #1e293b; }
+</style>
+
+<script>
+function showTab(name) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('pane-' + name).classList.remove('hidden');
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+function openPasswordModal() { document.getElementById('passwordModal').classList.remove('hidden'); }
+
+async function changePassword() {
+    const pw = document.getElementById('newPass').value.trim();
+    if (!pw || pw.length < 4) return Swal.fire({ icon: 'warning', text: 'كلمة المرور قصيرة جداً', confirmButtonColor: '#118C7E' });
+    const res = await fetch('/api/admin/users/<%= targetUser.id %>', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw })
+    });
+    const data = await res.json();
+    if (res.ok) Swal.fire({ icon: 'success', text: 'تم تغيير كلمة المرور.', confirmButtonColor: '#118C7E' }).then(() => document.getElementById('passwordModal').classList.add('hidden'));
+    else Swal.fire({ icon: 'error', text: data.error, confirmButtonColor: '#118C7E' });
+}
+
+async function toggleStatus(id, current) {
+    const res = await fetch('/api/admin/users/' + id, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !current })
+    });
+    if (res.ok) location.reload();
+}
+
+async function changePlan(id) {
+    const plan_id = document.getElementById('changePlan').value;
+    const res = await fetch('/api/admin/users/' + id, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan_id })
+    });
+    if (res.ok) Swal.fire({ icon: 'success', text: 'تم تغيير الباقة.', confirmButtonColor: '#118C7E' }).then(() => location.reload());
+}
+
+async function deleteUser(id) {
+    const r = await Swal.fire({ title: 'حذف المستخدم؟', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonText: 'إلغاء', confirmButtonText: 'حذف نهائياً' });
+    if (!r.isConfirmed) return;
+    const res = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+    if (res.ok) window.location.href = '/admin';
+}
+</script>
+
+<%- include('../partials/admin_footer') %>
