@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiWA — بوابة برمجية متكاملة ومفتوحة المصدر للواتساب بزنس</title>
+  <meta name="description" content="البوابة البرمجية الأكثر تكاملاً لإرسال الرسائل، حملات البث، وقواعد الأتمتة للواتساب. تدعم محركات متعددة، مهيأة للشركات والمؤسسات، ومستضافة ذاتياً بالكامل.">
+  <meta name="keywords" content="واتساب ويب, بوابة واتساب, تطبيق واتساب, مفتوح المصدر, أتمتة الواتساب, إرسال جماعي, whatsapp api">
+  <meta property="og:title" content="MultiWA — بوابة واتساب برمجية مفتوحة المصدر">
+  <meta property="og:description" content="ربط محركات اتصال متعددة، استضافة ذاتية بالكامل للواتساب بزنس. تشغيل بضغطة زر باستخدام Docker.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/ribato22/MultiWA/main/docs/social-preview.png">
+  <meta property="og:url" content="https://ribato22.github.io/MultiWA/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Nav -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <img src="https://raw.githubusercontent.com/ribato22/MultiWA/main/apps/admin/public/logo.png" alt="MultiWA" width="36" height="36">
+        <span>MultiWA</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">المميزات</a>
+        <a href="#screenshots">الواجهات</a>
+        <a href="#quickstart">البدء السريع</a>
+        <a href="/dashboard" class="btn btn-nav">لوحة التحكم السحابية</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-glow"></div>
+    <div class="container">
+      <div class="badge">مفتوح المصدر · مستضاف ذاتياً · محركات متعددة للاتصال</div>
+      <h1>بوابة برمجية للواتساب<br><span class="gradient-text">مصممة للجميع</span></h1>
+      <p class="subtitle">بوابتك المتكاملة والمجانية لإرسال الرسائل، حملات البث الجماعي، وبناء قواعد الأتمتة الذكية. تدعم محركات متعددة ومتوافقة مع أعلى معايير أمان الشركات والمؤسسات.</p>
+      <div class="hero-actions">
+        <a href="#quickstart" class="btn btn-primary btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          البدء والتشغيل السريع
+        </a>
+        <a href="/dashboard" class="btn btn-outline btn-lg">
+          دخول لوحة التحكم العامة
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><strong>19+</strong><span>نجوم على GitHub</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><strong>MIT</strong><span>رخصة مجانية مفتوحة</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><strong>3</strong><span>مكتبات برمجية (SDKs)</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><strong>2</strong><span>محركات اتصال متكاملة</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="container">
+      <h2 class="section-title">كل ما تحتاجه للربط والتكامل</h2>
+      <p class="section-sub">حلول ربط وتواصل متكاملة للشركات والمؤسسات، دون التكاليف الباهظة وبتحكم كامل في بياناتك الخاصة.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>جلسات متعددة (Multi-Session)</h3>
+          <p>ربط قنوات وأجهزة واتساب متعددة غير محدودة والتحكم بها من واجهة برمجية موحدة.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔌</div>
+          <h3>محركات اتصال (Multi-Engine)</h3>
+          <p>التبديل التلقائي والسلس بين محركات الربط السحابي whatsapp-web.js و Baileys.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📢</div>
+          <h3>حملات البث الجماعي (Broadcast)</h3>
+          <p>إرسال رسائل جماعية للعملاء مع دعم المتغيرات وقوالب الرسائل وتتبع حالة تسليمها فورياً.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>ردود آلية بالذكاء الاصطناعي</h3>
+          <p>بناء قواعد أتمتة وربطها بنماذج OpenAI و Google AI لتجيب نيابة عنك بناءً على ملفات المعرفة.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>تحليلات وتقارير فورية</h3>
+          <p>لوحات تحكم رسومية لمراقبة حجم الرسائل المرسلة والمستلمة ومعدلات النجاح اليومية.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3>ويب هوك ومكتبات SDK</h3>
+          <p>مكتبات برمجية رسمية لـ TypeScript و Python و PHP مع استقبال إشعارات الويب هوك بشكل فوري.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🐳</div>
+          <h3>Docker جاهز تماماً</h3>
+          <p>أمر تشغيل واحد فقط كفيل بتأسيس وتشغيل البوابة وحاوياتها مع فحوصات الصحة الدورية تلقائياً.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>أمان وحماية الخصوصية</h3>
+          <p>توثيق وحماية باستخدام مفاتيح API وتوكنات JWT المشفرة، مع تحكم وتشفير للبيانات لحفظ الخصوصية.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section id="screenshots">
+    <div class="container">
+      <h2 class="section-title">لوحة تحكم وتطبيق عصري فاخر</h2>
+      <p class="section-sub">قم بإدارة أجهزتك ومحادثاتك ورسائلك من خلال واجهة مستخدم متناسقة ومريحة.</p>
+      <div class="screenshots-grid">
+        <div class="screenshot-card">
+          <img src="https://raw.githubusercontent.com/ribato22/MultiWA/main/docs/screenshots/dashboard.png" alt="Dashboard" loading="lazy">
+          <span>شاشة الإحصائيات العامة</span>
+        </div>
+        <div class="screenshot-card">
+          <img src="https://raw.githubusercontent.com/ribato22/MultiWA/main/docs/screenshots/chat.png" alt="Chat" loading="lazy">
+          <span>الدردشة المباشرة مع العملاء</span>
+        </div>
+        <div class="screenshot-card">
+          <img src="https://raw.githubusercontent.com/ribato22/MultiWA/main/docs/screenshots/broadcast.png" alt="Broadcast" loading="lazy">
+          <span>إدارة حملات الإرسال الجماعي</span>
+        </div>
+        <div class="screenshot-card">
+          <img src="https://raw.githubusercontent.com/ribato22/MultiWA/main/docs/screenshots/analytics.png" alt="Analytics" loading="lazy">
+          <span>شاشة التقارير والتحليلات البيانية</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section id="comparison">
+    <div class="container">
+      <h2 class="section-title">لماذا تختار MultiWA؟</h2>
+      <p class="section-sub">مقارنة سريعة توضح الفوارق بين منصتنا والحلول البديلة المتاحة.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>الميزة</th><th class="highlight">بوابة MultiWA</th><th>الربط السحابي الرسمي لـ Meta</th><th>Evolution API</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>استضافة ذاتية (تحكم كامل)</td><td class="highlight">✅ نعم (أمان وخصوصية 100%)</td><td>❌ مستضاف لدى خوادم Meta</td><td>✅ نعم</td></tr>
+            <tr><td>تعدد المحركات البرمجية</td><td class="highlight">✅ نعم (محركين للاتصال)</td><td>❌ محرك واحد رسمي</td><td>❌ محرك ثابت</td></tr>
+            <tr><td>واجهة ولوحة تحكم متكاملة</td><td class="highlight">✅ نعم (لوحة متكاملة وحديثة وعربية)</td><td>❌ لا يوجد لوحة تحكم مجانية</td><td>⚠️ لوحة تحكم أساسية وبسيطة</td></tr>
+            <tr><td>ردود آلية بالذكاء الاصطناعي</td><td class="highlight">✅ نعم (بناء مخطط ذكي مدمج)</td><td>❌ يتطلب نظام خارجي مكلف</td><td>❌ غير متاح</td></tr>
+            <tr><td>قواعد بيانات ومعرفة AI</td><td class="highlight">✅ نعم (تكامل OpenAI + Google)</td><td>❌ لا يوجد</td><td>❌ لا يوجد</td></tr>
+            <tr><td>مكتبات برمجية رسمية (SDKs)</td><td class="highlight">✅ نعم (TS, Python, PHP)</td><td>✅ نعم (متعددة)</td><td>⚠️ مكتبات مجتمعية غير رسمية</td></tr>
+            <tr><td>تكلفة التشغيل</td><td class="highlight">✅ مجاني مفتوح المصدر (رخصة MIT)</td><td>⚠️ تكلفة لكل محادثة ورسالة</td><td>✅ مجاني</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section id="quickstart">
+    <div class="container">
+      <h2 class="section-title">ابدأ التشغيل خلال ثوانٍ معدودة</h2>
+      <p class="section-sub">أربعة أوامر برمجية بسيطة في الطرفية كفيلة بتهيئة وتشغيل بوابتك الخاصة بالكامل.</p>
+      <div class="code-block" dir="ltr">
+        <div class="code-header">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <span>Terminal</span>
+        </div>
+        <pre><code><span class="c"># Clone the repository / استنساخ المستودع البرمجي</span>
+git clone https://github.com/turky4500/wats1.git
+cd wats1
+
+<span class="c"># Configure and run / تهيئة الإعدادات والتشغيل الفوري</span>
+cp .env.docker .env
+docker compose up -d
+
+<span class="c"># 🎉 Done! Access: / مبروك! يمكنك الوصول إلى:</span>
+<span class="c"># Admin Dashboard → http://localhost:3001 (لوحة الواجهات)</span>
+<span class="c"># API Swagger     → http://localhost:3333/api/docs (وثائق المطورين)</span></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img src="https://raw.githubusercontent.com/ribato22/MultiWA/main/apps/admin/public/logo.png" alt="MultiWA" width="32" height="32">
+          <span>MultiWA</span>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/turky4500/wats1" target="_blank">مستودع GitHub</a>
+          <a href="/dashboard">دخول لوحة التحكم</a>
+          <a href="https://github.com/turky4500/wats1/blob/main/LICENSE" target="_blank">رخصة MIT المفتوحة</a>
+        </div>
+      </div>
+      <p class="copyright">صنع بالكامل لدعم المشاريع والشركات العربية بواسطة بوابة MultiWA</p>
+    </div>
+  </footer>
+</body>
+</html>

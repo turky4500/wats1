@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المستخدم - نظام واتساب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .btn-logout {
+            background-color: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            background-color: #ccc;
+        }
+        .status-badge.connected { background-color: #25D366; }
+        .status-badge.disconnected { background-color: #dc3545; }
+        
+        #qr-container {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        #qr-container img {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .message-form {
+            display: none; /* Hidden by default, shown if permitted */
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: 'Cairo', sans-serif;
+            box-sizing: border-box;
+        }
+        .btn-send {
+            background-color: #128C7E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-send:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .alert-success { background-color: #d4edda; color: #155724; }
+        .alert-error { background-color: #f8d7da; color: #721c24; }
+        .alert-warning { background-color: #fff3cd; color: #856404; display: block;}
+    </style>
+    <!-- Include Socket.io client -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2>أهلاً <span id="usernameDisplay"></span></h2>
+                <div>حالة الواتساب: <span id="waStatus" class="status-badge">جاري التحقق...</span></div>
+            </div>
+            <button class="btn-logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+
+        <div id="noPermissionAlert" class="alert alert-warning">
+            عذراً، ليس لديك صلاحية لإرسال الرسائل. تواصل مع الإدارة.
+        </div>
+
+        <div id="qr-container">
+            <h3>يرجى مسح الكود لربط الواتساب</h3>
+            <img id="qrImage" src="" alt="QR Code">
+        </div>
+
+        <div id="messageFormContainer" class="message-form">
+            <h3>إرسال رسالة</h3>
+            <div id="msgAlert" class="alert"></div>
+            <form id="sendMessageForm">
+                <div class="form-group">
+                    <label>رقم الواتساب (مع رمز الدولة، بدون +)</label>
+                    <input type="text" id="phoneNumber" placeholder="مثال: 966500000000" required>
+                </div>
+                <div class="form-group">
+                    <label>الرسالة</label>
+                    <textarea id="messageText" rows="4" required></textarea>
+                </div>
+                <button type="submit" id="btnSend" class="btn-send" disabled>إرسال الرسالة</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let waConnected = false;
+        let userCanSend = false;
+
+        // Fetch User Info to check permissions
+        async function fetchUserInfo() {
+            try {
+                const res = await fetch('/api/me');
+                if(res.status === 401 || res.status === 403) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const user = await res.json();
+                document.getElementById('usernameDisplay').innerText = user.username;
+                
+                userCanSend = user.can_send_messages === 1;
+                
+                if (userCanSend) {
+                    document.getElementById('noPermissionAlert').style.display = 'none';
+                    document.getElementById('messageFormContainer').style.display = 'block';
+                } else {
+                    document.getElementById('noPermissionAlert').style.display = 'block';
+                    document.getElementById('messageFormContainer').style.display = 'none';
+                }
+                updateSendButtonState();
+            } catch (err) {
+                console.error("Error fetching user info", err);
+            }
+        }
+
+        // Socket Events for WhatsApp Status
+        socket.on('status', (status) => {
+            const statusEl = document.getElementById('waStatus');
+            const qrContainer = document.getElementById('qr-container');
+            
+            statusEl.className = 'status-badge'; // reset class
+            
+            if (status === 'connected') {
+                statusEl.innerText = 'متصل';
+                statusEl.classList.add('connected');
+                qrContainer.style.display = 'none';
+                waConnected = true;
+            } else if (status === 'qr_ready') {
+                statusEl.innerText = 'بانتظار المسح';
+                statusEl.classList.add('disconnected');
+                qrContainer.style.display = 'block';
+                waConnected = false;
+            } else {
+                statusEl.innerText = 'غير متصل';
+                statusEl.classList.add('disconnected');
+                qrContainer.style.display = 'none';
+                waConnected = false;
+            }
+            updateSendButtonState();
+        });
+
+        socket.on('qr', (qrData) => {
+            const qrImage = document.getElementById('qrImage');
+            qrImage.src = qrData;
+            document.getElementById('qr-container').style.display = 'block';
+        });
+
+        function updateSendButtonState() {
+            const btnSend = document.getElementById('btnSend');
+            if (waConnected && userCanSend) {
+                btnSend.disabled = false;
+            } else {
+                btnSend.disabled = true;
+            }
+        }
+
+        // Send Message
+        document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const number = document.getElementById('phoneNumber').value;
+            const message = document.getElementById('messageText').value;
+            const btnSend = document.getElementById('btnSend');
+            const alertBox = document.getElementById('msgAlert');
+            
+            btnSend.disabled = true;
+            btnSend.innerText = 'جاري الإرسال...';
+            alertBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/send-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number, message })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alertBox.innerText = data.message;
+                    alertBox.className = 'alert alert-success';
+                    document.getElementById('messageText').value = ''; // clear message
+                } else {
+                    alertBox.innerText = data.error || 'فشل الإرسال';
+                    alertBox.className = 'alert alert-error';
+                }
+            } catch (err) {
+                alertBox.innerText = 'خطأ في الاتصال بالخادم';
+                alertBox.className = 'alert alert-error';
+            } finally {
+                alertBox.style.display = 'block';
+                btnSend.disabled = false;
+                btnSend.innerText = 'إرسال الرسالة';
+                setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
+            }
+        });
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        // Initialize
+        fetchUserInfo();
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "wats1",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">\r   <img src=\"apps/admin/public/logo.png\" alt=\"MultiWA Logo\" width=\"80\" />\r </p>",
+  "main": "app.js",
+  "dependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-riot": "^1.0.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-scope": "^7.2.2",
+    "eslint-visitor-keys": "^3.4.3",
+    "otplib": "^13.2.1",
+    "prettier": "^3.8.1",
+    "qrcode": "^1.5.4",
+    "turbo": "^2.8.2",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

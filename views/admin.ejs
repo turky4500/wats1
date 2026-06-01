@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة - نظام واتساب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .btn-logout {
+            background-color: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+        }
+        .btn-add {
+            background-color: #128C7E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: right;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .toggle-btn {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-btn input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #25D366;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>لوحة الإدارة (Admin)</h2>
+            <button class="btn-logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+
+        <div>
+            <h3>إضافة مستخدم جديد</h3>
+            <form id="addUserForm" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="newUsername" placeholder="اسم المستخدم" required style="padding: 8px; flex: 1;">
+                <input type="password" id="newPassword" placeholder="كلمة المرور" required style="padding: 8px; flex: 1;">
+                <button type="submit" class="btn-add">إضافة</button>
+            </form>
+        </div>
+
+        <h3>إدارة المستخدمين</h3>
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>المعرف</th>
+                    <th>اسم المستخدم</th>
+                    <th>صلاحية الإرسال</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Users will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchUsers() {
+            try {
+                const res = await fetch('/api/users');
+                if(res.status === 401 || res.status === 403) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const users = await res.json();
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+                
+                users.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>
+                            <label class="toggle-btn">
+                                <input type="checkbox" ${user.can_send_messages ? 'checked' : ''} onchange="togglePermission(${user.id}, this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <button class="btn-delete" onclick="deleteUser(${user.id})">حذف</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Error fetching users", err);
+            }
+        }
+
+        async function togglePermission(userId, canSend) {
+            try {
+                await fetch(`/api/users/${userId}/toggle-permission`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ can_send_messages: canSend ? 1 : 0 })
+                });
+            } catch (err) {
+                console.error("Error updating permission", err);
+                fetchUsers(); // Revert UI if error
+            }
+        }
+
+        async function deleteUser(userId) {
+            if(confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                try {
+                    await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+                    fetchUsers();
+                } catch (err) {
+                    console.error("Error deleting user", err);
+                }
+            }
+        }
+
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if(res.ok) {
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                    fetchUsers();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'حدث خطأ');
+                }
+            } catch (err) {
+                console.error("Error adding user", err);
+            }
+        });
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        // Initial load
+        fetchUsers();
+    </script>
+</body>
+</html>
