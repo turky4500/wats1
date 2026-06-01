@@ -1,0 +1,79 @@
+<% locals.adminTab = 'users'; locals.pageTitle = 'إدارة المستخدمين'; %>
+<%- include('../partials/admin_sidebar') %>
+
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+        <h2 class="font-black text-lg">جميع المستخدمين (<%= users.length %>)</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">#</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">المستخدم</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">البريد الإلكتروني</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">الباقة</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">الدور</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">تاريخ الإنشاء</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">إجراء</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <% users.forEach(u => { %>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <td class="px-6 py-4 text-slate-400"><%= u.id %></td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-whatsapp font-black text-sm">
+                                <%= u.username.charAt(0).toUpperCase() %>
+                            </div>
+                            <span class="font-bold"><%= u.username %></span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500"><%= u.email %></td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold"><%= u.plan_name || 'Starter' %></span></td>
+                    <td class="px-6 py-4">
+                        <% if(u.role === 'admin') { %>
+                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">مدير</span>
+                        <% } else { %>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">مستخدم</span>
+                        <% } %>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500 text-xs"><%= new Date(u.created_at).toLocaleDateString('ar-SA') %></td>
+                    <td class="px-6 py-4">
+                        <% if(u.role !== 'admin') { %>
+                        <button onclick="deleteUser(<%= u.id %>)" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-trash"></i> حذف
+                        </button>
+                        <% } %>
+                    </td>
+                </tr>
+                <% }) %>
+                <% if(users.length === 0) { %>
+                <tr><td colspan="7" class="text-center py-12 text-slate-400">لا يوجد مستخدمون</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+async function deleteUser(id) {
+    const result = await Swal.fire({
+        title: 'هل أنت متأكد؟',
+        text: 'سيتم حذف المستخدم وجميع بياناته.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'إلغاء',
+        confirmButtonText: 'نعم، احذف'
+    });
+    if (result.isConfirmed) {
+        const res = await fetch('/api/admin/users/' + id, { method: 'DELETE' });
+        if (res.ok) location.reload();
+        else Swal.fire('خطأ', 'فشل الحذف', 'error');
+    }
+}
+</script>
+
+<%- include('../partials/admin_footer') %>

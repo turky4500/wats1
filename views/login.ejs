@@ -1,52 +1,99 @@
-<%- include('header') %>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | إيزي واتس</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
+    <style>body { font-family: 'IBM Plex Sans Arabic', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-center justify-center px-4">
 
-<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-    <div class="glass-card" style="width: 100%; max-width: 400px; text-align: center;">
-        <h2 class="mb-4" style="color: var(--primary-dark)">تسجيل الدخول</h2>
-        <form id="loginForm">
-            <div class="form-group">
-                <input type="text" id="username" class="form-control" placeholder="اسم المستخدم" required>
+<div class="w-full max-w-md">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+        <a href="/" class="inline-flex items-center gap-2 text-3xl font-black text-[#118C7E]">
+            <i class="fa-brands fa-whatsapp"></i> إيزي واتس
+        </a>
+        <p class="mt-2 text-slate-500 dark:text-slate-400">مرحباً بعودتك 👋</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-8">
+        <h1 class="text-2xl font-black mb-6">تسجيل الدخول</h1>
+
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold mb-1.5 text-slate-700 dark:text-slate-300">البريد الإلكتروني</label>
+                <input type="email" id="email" required placeholder="example@domain.com"
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] focus:ring-2 focus:ring-[#118C7E]/20 transition text-sm">
             </div>
-            <div class="form-group mb-4">
-                <input type="password" id="password" class="form-control" placeholder="كلمة المرور" required>
+            <div>
+                <label class="block text-sm font-bold mb-1.5 text-slate-700 dark:text-slate-300">كلمة المرور</label>
+                <div class="relative">
+                    <input type="password" id="password" required placeholder="••••••••"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] focus:ring-2 focus:ring-[#118C7E]/20 transition text-sm">
+                    <button type="button" onclick="togglePass()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-eye text-sm"></i>
+                    </button>
+                </div>
             </div>
-            <button type="submit" class="btn-primary" style="width: 100%;">دخول</button>
+            <button type="submit" id="submitBtn"
+                class="w-full py-3.5 bg-[#118C7E] hover:bg-[#25D366] text-white font-black rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> دخول
+            </button>
         </form>
-        <p class="mt-4 text-muted">ليس لديك حساب؟ <a href="/register" style="color: var(--primary-color);">سجل الآن</a></p>
+
+        <p class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+            ليس لديك حساب؟ <a href="/register" class="text-[#118C7E] font-bold hover:underline">سجّل مجاناً</a>
+        </p>
+    </div>
+
+    <!-- Admin hint -->
+    <div class="mt-4 text-center">
+        <p class="text-xs text-slate-400">للتجربة: admin@easywhats.app | admin123</p>
     </div>
 </div>
 
 <script>
+function togglePass() {
+    const p = document.getElementById('password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+}
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
+    btn.disabled = true;
 
     try {
         const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            })
         });
         const data = await res.json();
-        
         if (!res.ok) {
-            Swal.fire('خطأ', data.error, 'error');
+            Swal.fire({ icon: 'error', title: 'خطأ', text: data.error, confirmButtonColor: '#118C7E' });
+            btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> دخول';
+            btn.disabled = false;
         } else {
-            Swal.fire({
-                icon: 'success',
-                title: 'مرحباً بك!',
-                text: 'جاري تحويلك...',
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
-            });
+            window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
         }
-    } catch (err) {
-        Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+    } catch {
+        Swal.fire({ icon: 'error', title: 'خطأ', text: 'تعذّر الاتصال بالخادم', confirmButtonColor: '#118C7E' });
+        btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> دخول';
+        btn.disabled = false;
     }
 });
 </script>
-
-<%- include('footer') %>
+</body>
+</html>

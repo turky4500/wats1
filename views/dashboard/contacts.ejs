@@ -1,0 +1,93 @@
+<% locals.activeTab = 'contacts'; locals.pageTitle = 'جهات الاتصال'; %>
+<%- include('../partials/dashboard_sidebar') %>
+
+<div class="mb-6 flex justify-end">
+    <button onclick="document.getElementById('addContactModal').classList.remove('hidden')" class="bg-whatsapp hover:bg-whatsappLight text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition shadow-lg shadow-emerald-500/20">
+        <i class="fa-solid fa-plus"></i> إضافة جهة اتصال
+    </button>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+        <p class="text-xs font-bold text-slate-400 mb-1">إجمالي جهات الاتصال</p>
+        <h3 class="text-3xl font-black text-slate-900 dark:text-white"><%= contacts.length %></h3>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800">
+        <p class="text-xs font-bold text-slate-400 mb-1">عدد المجموعات</p>
+        <h3 class="text-3xl font-black text-whatsapp"><%= [...new Set(contacts.map(c => c.group_name))].length %></h3>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">الاسم</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">رقم الجوال</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">المجموعة</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">إجراء</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <% contacts.forEach(c => { %>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <td class="px-6 py-4 font-bold"><%= c.name || '—' %></td>
+                    <td class="px-6 py-4 text-slate-500 font-mono"><%= c.phone_number %></td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold"><%= c.group_name %></span></td>
+                    <td class="px-6 py-4">
+                        <button onclick="deleteContact(<%= c.id %>)" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                <% }) %>
+                <% if(contacts.length === 0) { %>
+                <tr><td colspan="4" class="text-center py-12 text-slate-400">لا توجد جهات اتصال. أضف جهة اتصال جديدة.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Contact Modal -->
+<div id="addContactModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full m-4 shadow-2xl">
+        <h3 class="text-xl font-bold mb-5">إضافة جهة اتصال جديدة</h3>
+        <div class="space-y-4">
+            <input type="text" id="cName" placeholder="اسم العميل (اختياري)" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-whatsapp">
+            <input type="text" id="cPhone" placeholder="رقم الجوال (مثال: 9665xxxxxxx)" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-whatsapp">
+            <input type="text" id="cGroup" placeholder="اسم المجموعة (افتراضي: default)" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-whatsapp">
+        </div>
+        <div class="flex gap-3 mt-5">
+            <button onclick="document.getElementById('addContactModal').classList.add('hidden')" class="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold">إلغاء</button>
+            <button onclick="saveContact()" class="flex-1 px-4 py-2.5 bg-whatsapp text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20">حفظ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function saveContact() {
+    const name = document.getElementById('cName').value;
+    const phone_number = document.getElementById('cPhone').value;
+    const group_name = document.getElementById('cGroup').value || 'default';
+    if (!phone_number) return Swal.fire('تنبيه', 'يجب إدخال رقم الجوال', 'warning');
+    const res = await fetch('/api/contacts', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name, phone_number, group_name })
+    });
+    if (res.ok) location.reload();
+    else Swal.fire('خطأ', 'فشل الحفظ', 'error');
+}
+async function deleteContact(id) {
+    const r = await Swal.fire({ title: 'حذف؟', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonText: 'إلغاء', confirmButtonText: 'حذف' });
+    if (r.isConfirmed) {
+        const res = await fetch('/api/contacts/' + id, { method: 'DELETE' });
+        if (res.ok) location.reload();
+    }
+}
+</script>
+
+<%- include('../partials/dashboard_footer') %>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= locals.pageTitle || 'لوحة التحكم' %> | إيزي واتس</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');</script>
+    <style>
+        body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+        .sidebar-link { @apply flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 h-full">
+<div class="flex h-screen overflow-hidden">
+
+    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+    <aside class="w-64 shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800">
+        <!-- Logo -->
+        <div class="flex items-center justify-between h-16 px-5 border-b border-slate-200 dark:border-slate-800">
+            <a href="/" class="flex items-center gap-2 text-xl font-black text-[#118C7E]">
+                <i class="fa-brands fa-whatsapp text-2xl"></i> إيزي واتس
+            </a>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 px-2 mb-2">القائمة</p>
+
+            <a href="/dashboard"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all <%= locals.activeTab==='overview' ? 'bg-[#118C7E]/10 text-[#118C7E]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+                <i class="fa-solid fa-house-chimney w-5 text-center"></i> الرئيسية
+            </a>
+
+            <a href="/dashboard/devices"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all <%= locals.activeTab==='devices' ? 'bg-[#118C7E]/10 text-[#118C7E]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+                <i class="fa-solid fa-mobile-screen w-5 text-center"></i> الأجهزة والربط
+            </a>
+
+            <a href="/dashboard/contacts"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all <%= locals.activeTab==='contacts' ? 'bg-[#118C7E]/10 text-[#118C7E]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+                <i class="fa-solid fa-address-book w-5 text-center"></i> جهات الاتصال
+            </a>
+
+            <a href="/dashboard/campaigns"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all <%= locals.activeTab==='campaigns' ? 'bg-[#118C7E]/10 text-[#118C7E]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+                <i class="fa-solid fa-bullhorn w-5 text-center"></i> الحملات الجماعية
+            </a>
+
+            <a href="/dashboard/auto-replies"
+                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all <%= locals.activeTab==='auto-replies' ? 'bg-[#118C7E]/10 text-[#118C7E]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>">
+                <i class="fa-solid fa-bolt w-5 text-center"></i> الرد الآلي
+            </a>
+        </nav>
+
+        <!-- User -->
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+                <div class="w-9 h-9 rounded-full bg-[#118C7E]/20 flex items-center justify-center text-[#118C7E] font-black text-sm">
+                    <%= user.username.charAt(0).toUpperCase() %>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold truncate"><%= user.username %></p>
+                    <p class="text-xs text-slate-400">حساب مفعّل</p>
+                </div>
+            </div>
+            <button onclick="toggleDark()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition">
+                <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:block text-yellow-400"></i>
+                <span class="dark:hidden">الوضع الليلي</span><span class="hidden dark:block">الوضع النهاري</span>
+            </button>
+            <button onclick="logout()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition">
+                <i class="fa-solid fa-power-off"></i> تسجيل الخروج
+            </button>
+        </div>
+    </aside>
+
+    <!-- ── Main ────────────────────────────────────────────────────────── -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 shrink-0 flex items-center px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+            <h1 class="text-lg font-black text-slate-800 dark:text-white"><%= locals.pageTitle || 'لوحة التحكم' %></h1>
+        </header>
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">

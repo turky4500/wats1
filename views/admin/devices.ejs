@@ -1,0 +1,46 @@
+<% locals.adminTab = 'devices'; locals.pageTitle = 'إدارة الأجهزة'; %>
+<%- include('../partials/admin_sidebar') %>
+
+<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+        <h2 class="font-black text-lg">جميع الأجهزة (<%= devices.length %>)</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">اسم الجهاز</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">المستخدم</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">البريد</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">رقم الجوال</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">الحالة</th>
+                    <th class="text-right px-6 py-3 font-bold text-slate-500">تاريخ الإضافة</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <% devices.forEach(d => { %>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <td class="px-6 py-4 font-bold">
+                        <i class="fa-brands fa-whatsapp <%= d.status === 'connected' ? 'text-whatsapp' : 'text-slate-400' %> ml-2"></i>
+                        <%= d.name %>
+                    </td>
+                    <td class="px-6 py-4 font-bold"><%= d.username %></td>
+                    <td class="px-6 py-4 text-slate-500"><%= d.email %></td>
+                    <td class="px-6 py-4 text-slate-500"><%= d.phone_number || '—' %></td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold <%= d.status === 'connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' %>">
+                            <%= d.status === 'connected' ? '● متصل' : '○ مفصول' %>
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-400 text-xs"><%= new Date(d.created_at).toLocaleDateString('ar-SA') %></td>
+                </tr>
+                <% }) %>
+                <% if(devices.length === 0) { %>
+                <tr><td colspan="6" class="text-center py-12 text-slate-400">لا توجد أجهزة مسجلة</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../partials/admin_footer') %>

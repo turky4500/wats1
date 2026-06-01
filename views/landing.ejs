@@ -1,27 +1,251 @@
-<%- include('header') %>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيزي واتس — منصة حملات واتساب احترافية</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <style>
+        body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+        .hero-gradient { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(17,140,126,0.15), transparent); }
+        .card-hover { transition: all 0.25s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(17,140,126,0.12); }
+        .pricing-popular { background: linear-gradient(135deg, #118C7E 0%, #25D366 100%); }
+    </style>
+</head>
+<body class="bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
 
-<div class="hero">
-    <h1>منصة الواتساب الاحترافية</h1>
-    <p>اربط رقمك، أرسل رسائلك، وتابع حالة الاتصال بكل سهولة ويسر من خلال واجهة حديثة وآمنة.</p>
-    <div class="mt-4">
-        <a href="/login" class="btn-primary" style="text-decoration: none; font-size: 1.2rem; padding: 15px 30px;">تسجيل الدخول</a>
-        <a href="/register" class="btn-primary" style="background: white; color: var(--primary-color); border: 2px solid var(--primary-color); text-decoration: none; font-size: 1.2rem; padding: 13px 30px; margin-right: 15px;">إنشاء حساب جديد</a>
+<!-- ── Navbar ────────────────────────────────────────────────────────────── -->
+<header class="fixed inset-x-0 top-0 z-50 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+        <div class="flex h-[70px] items-center justify-between">
+            <a href="/" class="flex items-center gap-2 text-2xl font-black text-[#118C7E]">
+                <i class="fa-brands fa-whatsapp text-3xl"></i> إيزي واتس
+            </a>
+            <nav class="hidden lg:flex items-center gap-1 text-sm font-bold text-slate-600 dark:text-slate-300">
+                <a href="#features" class="px-4 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#118C7E] transition">المميزات</a>
+                <a href="#how" class="px-4 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#118C7E] transition">كيف يعمل</a>
+                <a href="#pricing" class="px-4 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#118C7E] transition">الأسعار</a>
+            </nav>
+            <div class="flex items-center gap-2">
+                <button id="themeBtn" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:border-[#118C7E] hover:text-[#118C7E] transition">
+                    <i class="fa-solid fa-moon dark:hidden text-sm"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-sm text-yellow-400"></i>
+                </button>
+                <% if(typeof user === 'undefined' || !user) { %>
+                <a href="/login" class="hidden lg:inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-[#118C7E] transition">
+                    <i class="fa-regular fa-circle-user"></i> دخول
+                </a>
+                <a href="#pricing" class="hidden lg:inline-flex items-center gap-2 px-5 py-2.5 bg-[#118C7E] hover:bg-[#25D366] text-white text-sm font-black rounded-xl shadow-lg shadow-emerald-700/20 transition hover:-translate-y-0.5">
+                    ابدأ مجاناً <i class="fa-solid fa-arrow-left text-xs"></i>
+                </a>
+                <% } else { %>
+                <a href="<%= user.role === 'admin' ? '/admin' : '/dashboard' %>" class="hidden lg:inline-flex items-center gap-2 px-5 py-2.5 bg-[#118C7E] hover:bg-[#25D366] text-white text-sm font-black rounded-xl shadow-lg shadow-emerald-700/20 transition hover:-translate-y-0.5">
+                    لوحة التحكم <i class="fa-solid fa-grid-2 text-xs"></i>
+                </a>
+                <% } %>
+            </div>
+        </div>
     </div>
-</div>
+</header>
+<div class="h-[70px]"></div>
 
-<div style="display: flex; gap: 2rem; margin-top: 4rem; justify-content: center; text-align: center;">
-    <div class="glass-card" style="flex: 1; max-width: 300px;">
-        <h3 style="color: var(--primary-dark)">ربط سريع وآمن</h3>
-        <p class="text-muted">اربط جهازك إما بكود الـ QR أو باستخدام الرمز الرقمي المباشر.</p>
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="hero-gradient relative overflow-hidden py-20 lg:py-32">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2.5 mb-8 px-5 py-2.5 rounded-full border border-emerald-200/70 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10 text-sm font-bold text-[#118C7E]">
+                <span class="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
+                يثق بنا أكثر من 500+ عميل في المملكة والخليج
+            </div>
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.15] text-slate-950 dark:text-white mb-6">
+                أرسل، أَتمت، <br><span class="text-[#118C7E]">واربح أكثر</span>
+            </h1>
+            <p class="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-8 mb-10">
+                إيزي واتس يربط رقم واتساب الحالي بلوحة تحكم SaaS قوية. أرسل حملات جماعية، أعِد رداً تلقائياً، واتبع نتائجك في الوقت الفعلي.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#pricing" class="inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#118C7E] hover:bg-[#25D366] text-white text-base font-black rounded-2xl shadow-xl shadow-emerald-700/20 transition hover:-translate-y-1">
+                    <i class="fa-solid fa-rocket"></i> ابدأ مجاناً الآن
+                </a>
+                <a href="/login" class="inline-flex items-center justify-center gap-3 px-8 py-4 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white text-base font-black rounded-2xl hover:border-[#118C7E] hover:text-[#118C7E] transition">
+                    <i class="fa-regular fa-circle-user"></i> دخول الأعضاء
+                </a>
+            </div>
+            <div class="mt-10 flex flex-wrap justify-center gap-6 text-sm font-bold text-slate-500 dark:text-slate-400">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-[#25D366]"></i> بدون كود</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-[#25D366]"></i> يعمل مع رقمك الحالي</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-[#25D366]"></i> إرسال في دقائق</span>
+            </div>
+        </div>
     </div>
-    <div class="glass-card" style="flex: 1; max-width: 300px;">
-        <h3 style="color: var(--primary-dark)">إرسال متقدم</h3>
-        <p class="text-muted">أرسل رسائل نصية أو وسائط بسهولة مع متابعة سجل الإرسال.</p>
-    </div>
-    <div class="glass-card" style="flex: 1; max-width: 300px;">
-        <h3 style="color: var(--primary-dark)">إدارة كاملة</h3>
-        <p class="text-muted">لوحة تحكم للمدير وواجهة مخصصة لكل مستخدم للحفاظ على الخصوصية.</p>
-    </div>
-</div>
+    <!-- Decorative -->
+    <div class="absolute top-20 right-10 w-72 h-72 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none"></div>
+</section>
 
-<%- include('footer') %>
+<!-- ── Features ───────────────────────────────────────────────────────────── -->
+<section id="features" class="py-20 lg:py-28 bg-slate-50 dark:bg-slate-900/50">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+        <div class="text-center mb-16">
+            <span class="text-xs font-black uppercase tracking-widest text-[#118C7E] mb-3 block">المميزات</span>
+            <h2 class="text-3xl sm:text-5xl font-black text-slate-950 dark:text-white">كل ما تحتاجه في مكان واحد</h2>
+        </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center text-2xl text-[#118C7E] mb-5"><i class="fa-solid fa-bullhorn"></i></div>
+                <h3 class="text-xl font-black mb-2">الحملات الجماعية</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-7">أرسل رسائل مخصصة لآلاف العملاء دفعة واحدة مع دعم الصور والملفات والمتغيرات الديناميكية.</p>
+            </div>
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center text-2xl text-blue-600 mb-5"><i class="fa-solid fa-bolt"></i></div>
+                <h3 class="text-xl font-black mb-2">الرد الآلي (البوت)</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-7">اضبط كلمات مفتاحية ليرد البوت تلقائياً على عملائك 24/7 بالنصوص أو الملفات فوراً.</p>
+            </div>
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <div class="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-500/15 flex items-center justify-center text-2xl text-purple-600 mb-5"><i class="fa-solid fa-mobile-screen"></i></div>
+                <h3 class="text-xl font-black mb-2">أجهزة متعددة</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-7">ربط أكثر من رقم واتساب في نفس الوقت بلوحة تحكم واحدة مع دعم QR والرمز الرقمي.</p>
+            </div>
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center text-2xl text-amber-600 mb-5"><i class="fa-solid fa-address-book"></i></div>
+                <h3 class="text-xl font-black mb-2">إدارة جهات الاتصال</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-7">نظم قوائم عملائك في مجموعات واستهدف كل مجموعة بحملة مختلفة بكل سهولة.</p>
+            </div>
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <div class="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-500/15 flex items-center justify-center text-2xl text-rose-600 mb-5"><i class="fa-solid fa-chart-line"></i></div>
+                <h3 class="text-xl font-black mb-2">تقارير وإحصائيات</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-7">تتبع حالة كل حملة (مكتملة/فاشلة) وعدد الرسائل المرسلة من لوحة تحكم ذكية.</p>
+            </div>
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <div class="w-14 h-14 rounded-2xl bg-cyan-100 dark:bg-cyan-500/15 flex items-center justify-center text-2xl text-cyan-600 mb-5"><i class="fa-solid fa-code"></i></div>
+                <h3 class="text-xl font-black mb-2">API للمطورين</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-7">وصّل منصتنا بمتجرك على سلة أو زد أو أي نظام CRM لإرسال إشعارات واتساب تلقائياً.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── How it Works ───────────────────────────────────────────────────────── -->
+<section id="how" class="py-20 lg:py-28 bg-white dark:bg-slate-950">
+    <div class="max-w-5xl mx-auto px-5 sm:px-8 text-center">
+        <span class="text-xs font-black uppercase tracking-widest text-[#118C7E] mb-3 block">كيف يعمل</span>
+        <h2 class="text-3xl sm:text-5xl font-black text-slate-950 dark:text-white mb-16">3 خطوات لأول حملة لك</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-2xl bg-[#118C7E] flex items-center justify-center text-white text-2xl font-black mx-auto mb-5">١</div>
+                <h3 class="text-lg font-black mb-2">سجّل وربط رقمك</h3>
+                <p class="text-slate-500 dark:text-slate-400">أنشئ حسابك ثم امسح كود QR أو أدخل الرمز الرقمي لربط رقم واتساب الخاص بك.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-2xl bg-[#118C7E] flex items-center justify-center text-white text-2xl font-black mx-auto mb-5">٢</div>
+                <h3 class="text-lg font-black mb-2">أضف جهات الاتصال</h3>
+                <p class="text-slate-500 dark:text-slate-400">أضف أرقام عملائك ونظّمهم في مجموعات مخصصة لحملاتك المختلفة.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-2xl bg-[#118C7E] flex items-center justify-center text-white text-2xl font-black mx-auto mb-5">٣</div>
+                <h3 class="text-lg font-black mb-2">أطلق الحملة!</h3>
+                <p class="text-slate-500 dark:text-slate-400">اكتب رسالتك، اختر المجموعة المستهدفة، واضغط إرسال — سنتولى الباقي.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Pricing ─────────────────────────────────────────────────────────────── -->
+<section id="pricing" class="py-20 lg:py-28 bg-slate-50 dark:bg-slate-900/50">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8">
+        <div class="text-center mb-16">
+            <span class="text-xs font-black uppercase tracking-widest text-[#118C7E] mb-3 block">الأسعار</span>
+            <h2 class="text-3xl sm:text-5xl font-black text-slate-950 dark:text-white">اختر الباقة المناسبة لك</h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-center">
+
+            <!-- Starter -->
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <p class="text-sm font-black text-slate-400 uppercase tracking-wider mb-4">الانطلاق</p>
+                <div class="flex items-baseline gap-1 mb-6">
+                    <span class="text-5xl font-black text-slate-950 dark:text-white">مجانًا</span>
+                </div>
+                <ul class="space-y-3 text-sm font-bold text-slate-600 dark:text-slate-300 mb-8">
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> جهاز واتساب واحد</li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> 1,000 جهة اتصال</li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> 5 حملات شهرياً</li>
+                    <li class="flex items-center gap-3 text-slate-300 dark:text-slate-600"><i class="fa-solid fa-xmark"></i> الرد التلقائي</li>
+                </ul>
+                <a href="/register?plan=1" class="block text-center py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 font-black text-slate-700 dark:text-white hover:border-[#118C7E] hover:text-[#118C7E] transition">
+                    ابدأ مجاناً
+                </a>
+            </div>
+
+            <!-- Growth - Popular -->
+            <div class="pricing-popular rounded-3xl p-[2px] shadow-2xl shadow-emerald-700/30">
+                <div class="bg-[#118C7E] rounded-[22px] p-8 relative">
+                    <div class="absolute -top-4 right-1/2 translate-x-1/2 bg-yellow-400 text-yellow-900 px-4 py-1.5 rounded-full text-xs font-black shadow-lg">⭐ الأكثر طلباً</div>
+                    <p class="text-sm font-black text-emerald-200 uppercase tracking-wider mb-4">النمو</p>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-5xl font-black text-white">49</span>
+                        <span class="text-emerald-200 font-bold">ر.س/شهر</span>
+                    </div>
+                    <ul class="space-y-3 text-sm font-bold text-emerald-100 mb-8">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-white"></i> 3 أجهزة واتساب</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-white"></i> 10,000 جهة اتصال</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-white"></i> حملات غير محدودة</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-white"></i> الرد التلقائي</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-white"></i> إرسال صور وملفات</li>
+                    </ul>
+                    <a href="/register?plan=2" class="block text-center py-3 rounded-2xl bg-white text-[#118C7E] font-black hover:bg-emerald-50 transition">
+                        اشترك الآن
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pro -->
+            <div class="card-hover bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800">
+                <p class="text-sm font-black text-slate-400 uppercase tracking-wider mb-4">التوسع</p>
+                <div class="flex items-baseline gap-1 mb-6">
+                    <span class="text-5xl font-black text-slate-950 dark:text-white">99</span>
+                    <span class="text-slate-400 font-bold">ر.س/شهر</span>
+                </div>
+                <ul class="space-y-3 text-sm font-bold text-slate-600 dark:text-slate-300 mb-8">
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> 10 أجهزة واتساب</li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> 100,000 جهة اتصال</li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> كل مزايا النمو</li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> API للمطورين</li>
+                    <li class="flex items-center gap-3"><i class="fa-solid fa-check text-[#25D366]"></i> دعم فني أولوية</li>
+                </ul>
+                <a href="/register?plan=3" class="block text-center py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 font-black text-slate-700 dark:text-white hover:border-[#118C7E] hover:text-[#118C7E] transition">
+                    اشترك الآن
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 py-12 text-center">
+        <a href="/" class="inline-flex items-center gap-2 text-2xl font-black text-[#118C7E] mb-4">
+            <i class="fa-brands fa-whatsapp"></i> إيزي واتس
+        </a>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">جميع الحقوق محفوظة &copy; 2026</p>
+    </div>
+</footer>
+
+<script>
+document.getElementById('themeBtn').addEventListener('click', () => {
+    const html = document.documentElement;
+    html.classList.toggle('dark');
+    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+});
+</script>
+</body>
+</html>

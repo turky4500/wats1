@@ -1,15 +1,18 @@
 {
-  "name": "wats1",
+  "name": "easywhats-clone",
   "version": "1.0.0",
-  "description": "WhatsApp Lightweight Web App",
+  "description": "WhatsApp SaaS Platform Clone",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css",
+    "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch"
   },
   "dependencies": {
     "@hapi/hoek": "^11.0.4",
     "@whiskeysockets/baileys": "^6.7.9",
+    "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
     "ejs": "^3.1.10",
@@ -23,5 +26,9 @@
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.1",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17",
+    "nodemon": "^3.1.9"
   }
 }

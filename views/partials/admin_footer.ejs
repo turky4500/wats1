@@ -1,0 +1,15 @@
+        </div><!-- end content -->
+    </main>
+</div>
+<script>
+async function logout() {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+}
+function toggleDark() {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<% locals.activeTab = 'overview'; locals.pageTitle = 'نظرة عامة'; %>
+<%- include('../partials/dashboard_sidebar') %>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase">الأجهزة</span>
+            <span class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 text-sm"><i class="fa-solid fa-mobile-screen"></i></span>
+        </div>
+        <p class="text-3xl font-black text-slate-900 dark:text-white"><%= devices.length %></p>
+        <p class="text-xs text-slate-400 mt-1"><%= devices.filter(d=>d.status==='connected').length %> متصل</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase">جهات الاتصال</span>
+            <span class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-[#118C7E] text-sm"><i class="fa-solid fa-address-book"></i></span>
+        </div>
+        <p class="text-3xl font-black text-slate-900 dark:text-white"><%= contactsCount %></p>
+        <p class="text-xs text-slate-400 mt-1">إجمالي العملاء</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase">الحملات</span>
+            <span class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-600 text-sm"><i class="fa-solid fa-bullhorn"></i></span>
+        </div>
+        <p class="text-3xl font-black text-slate-900 dark:text-white"><%= campaigns.length %></p>
+        <p class="text-xs text-slate-400 mt-1"><%= campaigns.filter(c=>c.status==='completed').length %> مكتملة</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-400 uppercase">الردود الآلية</span>
+            <span class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-600 text-sm"><i class="fa-solid fa-bolt"></i></span>
+        </div>
+        <p class="text-3xl font-black text-slate-900 dark:text-white"><%= replies.filter(r=>r.is_active).length %></p>
+        <p class="text-xs text-slate-400 mt-1">بوت نشط</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="grid md:grid-cols-2 gap-6 mb-6">
+    <!-- Devices Status -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="font-black">حالة الأجهزة</h2>
+            <a href="/dashboard/devices" class="text-xs font-bold text-[#118C7E] hover:underline">إدارة الأجهزة ←</a>
+        </div>
+        <div class="p-4 space-y-3">
+            <% if(devices.length === 0) { %>
+            <div class="text-center py-8">
+                <i class="fa-solid fa-mobile-screen text-3xl text-slate-300 dark:text-slate-600 mb-2 block"></i>
+                <p class="text-sm text-slate-400">لا توجد أجهزة مرتبطة</p>
+                <a href="/dashboard/devices" class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#118C7E] hover:underline"><i class="fa-solid fa-plus"></i> أضف جهازاً</a>
+            </div>
+            <% } %>
+            <% devices.forEach(d => { %>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 <%= d.status==='connected' ? 'bg-[#25D366]' : 'bg-slate-400' %>"></span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold truncate"><%= d.name %></p>
+                    <p class="text-xs text-slate-400"><%= d.phone_number || 'غير مرتبط' %></p>
+                </div>
+                <span class="text-xs font-bold px-2 py-1 rounded-lg <%= d.status==='connected' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400' %>">
+                    <%= d.status==='connected' ? 'متصل' : 'مفصول' %>
+                </span>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- Recent Campaigns -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="font-black">آخر الحملات</h2>
+            <a href="/dashboard/campaigns" class="text-xs font-bold text-[#118C7E] hover:underline">حملة جديدة ←</a>
+        </div>
+        <div class="p-4 space-y-3">
+            <% if(campaigns.length === 0) { %>
+            <div class="text-center py-8">
+                <i class="fa-solid fa-bullhorn text-3xl text-slate-300 dark:text-slate-600 mb-2 block"></i>
+                <p class="text-sm text-slate-400">لم تُطلق أي حملة بعد</p>
+                <a href="/dashboard/campaigns" class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#118C7E] hover:underline"><i class="fa-solid fa-plus"></i> أطلق حملة</a>
+            </div>
+            <% } %>
+            <% campaigns.slice(0,4).forEach(c => { %>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+                <div class="w-9 h-9 rounded-xl bg-[#118C7E]/10 flex items-center justify-center text-[#118C7E]"><i class="fa-solid fa-bullhorn text-sm"></i></div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold truncate"><%= c.name %></p>
+                    <p class="text-xs text-slate-400"><%= new Date(c.created_at).toLocaleDateString('ar-SA') %></p>
+                </div>
+                <span class="text-xs font-bold px-2 py-1 rounded-lg <%= c.status==='completed' ? 'bg-emerald-100 text-emerald-700' : c.status==='processing' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-600' %>">
+                    <%= c.status==='completed' ? 'مكتملة' : c.status==='processing' ? 'جارية' : 'فاشلة' %>
+                </span>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+</div>
+
+<!-- Welcome banner if no devices -->
+<% if(devices.length === 0) { %>
+<div class="bg-gradient-to-l from-[#118C7E] to-[#25D366] rounded-2xl p-6 flex items-center gap-5">
+    <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-white text-2xl shrink-0"><i class="fa-brands fa-whatsapp"></i></div>
+    <div class="flex-1">
+        <h3 class="text-white font-black text-lg">ابدأ بربط رقم واتساب</h3>
+        <p class="text-emerald-100 text-sm mt-1">قم بربط رقمك الآن لتتمكن من إرسال الحملات وإعداد الردود التلقائية.</p>
+    </div>
+    <a href="/dashboard/devices" class="shrink-0 px-5 py-2.5 bg-white text-[#118C7E] font-black rounded-xl hover:bg-emerald-50 transition text-sm">
+        ربط الآن <i class="fa-solid fa-arrow-left mr-1"></i>
+    </a>
+</div>
+<% } %>
+
+<%- include('../partials/dashboard_footer') %>

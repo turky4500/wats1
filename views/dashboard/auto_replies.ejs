@@ -1,0 +1,125 @@
+<% locals.activeTab = 'auto-replies'; locals.pageTitle = 'الرد الآلي'; %>
+<%- include('../partials/dashboard_sidebar') %>
+
+<div class="grid lg:grid-cols-[1fr_380px] gap-6">
+
+    <!-- Replies List -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="font-black">الردود المُعدّة (<%= replies.length %>)</h2>
+        </div>
+        <% if(replies.length === 0) { %>
+        <div class="text-center py-12">
+            <i class="fa-solid fa-bolt text-3xl text-slate-300 dark:text-slate-600 mb-3 block"></i>
+            <p class="text-slate-500 text-sm">لم تُضف أي رد تلقائي بعد.</p>
+        </div>
+        <% } else { %>
+        <div class="divide-y divide-slate-100 dark:divide-slate-800">
+            <% replies.forEach(r => { %>
+            <div class="px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-bolt text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black rounded-lg">"<%= r.keyword %>"</span>
+                            <span class="text-xs text-slate-400"><%= r.device_name || 'جهاز غير معروف' %></span>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 line-clamp-2"><%= r.reply_content %></p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="toggleReply(<%= r.id %>)"
+                            class="text-xs font-bold px-2.5 py-1.5 rounded-lg transition <%= r.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' %>">
+                            <%= r.is_active ? 'مفعّل' : 'موقوف' %>
+                        </button>
+                        <button onclick="deleteReply(<%= r.id %>)" class="text-slate-300 dark:text-slate-600 hover:text-red-500 transition">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- New Reply Form -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 self-start">
+        <h3 class="font-black mb-5 flex items-center gap-2"><i class="fa-solid fa-plus-circle text-[#118C7E]"></i> رد تلقائي جديد</h3>
+
+        <% if(devices.length === 0) { %>
+        <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-sm text-amber-800 dark:text-amber-200 mb-4">
+            <i class="fa-solid fa-triangle-exclamation ml-1"></i>
+            يجب <a href="/dashboard/devices" class="font-black underline">ربط جهاز</a> أولاً.
+        </div>
+        <% } %>
+
+        <form id="replyForm" class="space-y-3">
+            <div>
+                <label class="block text-xs font-bold mb-1 text-slate-600 dark:text-slate-400">الجهاز</label>
+                <select id="replyDevice" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+                    <option value="">اختر جهازاً...</option>
+                    <% devices.forEach(d => { %><option value="<%= d.id %>"><%= d.name %></option><% }) %>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1 text-slate-600 dark:text-slate-400">الكلمة المفتاحية</label>
+                <input type="text" id="replyKeyword" required placeholder="مثال: أسعار، تفاصيل، موقعكم"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1 text-slate-600 dark:text-slate-400">نص الرد</label>
+                <textarea id="replyContent" rows="4" required placeholder="الرسالة التي سترسلها تلقائياً..."
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none focus:border-[#118C7E] text-sm resize-none"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1 text-slate-600 dark:text-slate-400">ملف مرفق (اختياري)</label>
+                <input type="file" id="replyFile" class="w-full text-xs text-slate-500 file:ml-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-[#118C7E]/10 file:text-[#118C7E] file:font-bold">
+            </div>
+            <button type="submit" id="replyBtn" <%= devices.length===0 ? 'disabled' : '' %>
+                class="w-full py-3 bg-[#118C7E] hover:bg-[#25D366] text-white font-black rounded-xl transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-floppy-disk ml-1"></i> حفظ الرد التلقائي
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('replyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('replyBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i> جاري الحفظ...';
+    btn.disabled = true;
+
+    const fd = new FormData();
+    fd.append('device_id', document.getElementById('replyDevice').value);
+    fd.append('keyword', document.getElementById('replyKeyword').value);
+    fd.append('reply_content', document.getElementById('replyContent').value);
+    const file = document.getElementById('replyFile').files[0];
+    if (file) fd.append('media', file);
+
+    const res = await fetch('/api/auto-replies', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'تم!', text: 'الرد التلقائي فعّال الآن.', confirmButtonColor: '#118C7E' })
+            .then(() => location.reload());
+    } else {
+        Swal.fire({ icon: 'error', title: 'خطأ', text: data.error, confirmButtonColor: '#118C7E' });
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk ml-1"></i> حفظ الرد التلقائي';
+        btn.disabled = false;
+    }
+});
+
+async function toggleReply(id) {
+    await fetch('/api/auto-replies/' + id + '/toggle', { method: 'PATCH' });
+    location.reload();
+}
+
+async function deleteReply(id) {
+    const r = await Swal.fire({ title: 'حذف؟', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonText: 'إلغاء', confirmButtonText: 'حذف' });
+    if (r.isConfirmed) { await fetch('/api/auto-replies/' + id, { method: 'DELETE' }); location.reload(); }
+}
+</script>
+
+<%- include('../partials/dashboard_footer') %>

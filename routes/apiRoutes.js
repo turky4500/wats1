@@ -7,24 +7,18 @@ const path = require('path');
 const db = require('../database/db');
 const whatsappManager = require('../utils/whatsappManager');
 
-const JWT_SECRET = 'premium_secret_wats1_replace_me';
+const JWT_SECRET = 'easywhats_clone_secret';
 
-// Setup multer for media uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../uploads/'));
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+    destination: (req, file, cb) => cb(null, path.join(__dirname, '../uploads/')),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
-// --- Middlewares ---
+// ── Middlewares ───────────────────────────────────────────────────────────────
 const authenticateToken = (req, res, next) => {
     const token = req.cookies?.token;
-    if (!token) return res.status(401).json({ error: 'غير مصرح لك بالدخول.' });
-
+    if (!token) return res.status(401).json({ error: 'غير مصرح.' });
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ error: 'الجلسة منتهية.' });
         req.user = user;
@@ -32,145 +26,232 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-const isAdmin = (req, res, next) => {
-    if (req.user && req.user.role === 'admin') next();
-    else res.status(403).json({ error: 'صلاحيات الإدارة مطلوبة.' });
-};
-
-// --- Auth APIs ---
+// ── Auth ──────────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'الرجاء إدخال اسم المستخدم وكلمة المرور.' });
-
+    const { username, email, password, planId } = req.body;
+    if (!username || !email || !password) return res.status(400).json({ error: 'جميع الحقول مطلوبة.' });
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        
-        // Users registered themselves wait for admin approval to send messages
-        db.run(`INSERT INTO users (username, password, role, can_send_messages) VALUES (?, ?, 'user', 0)`, 
-        [username, hashedPassword], function(err) {
-            if (err) {
-                if(err.message.includes('UNIQUE')) return res.status(400).json({ error: 'اسم المستخدم موجود مسبقاً.' });
-                return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
+        db.run(
+            `INSERT INTO users (username, email, password, plan_id) VALUES (?, ?, ?, ?)`,
+            [username, email, hashedPassword, planId || 1],
+            function (err) {
+                if (err) return res.status(400).json({ error: 'البريد أو اسم المستخدم مستخدم مسبقاً.' });
+                const token = jwt.sign({ id: this.lastID, username, role: 'user' }, JWT_SECRET);
+                res.cookie('token', token, { httpOnly: true });
+                res.json({ message: 'تم إنشاء الحساب.', role: 'user' });
             }
-            res.json({ message: 'تم إنشاء الحساب بنجاح! بانتظار تفعيل الإدارة.' });
-        });
+        );
     } catch (e) {
         res.status(500).json({ error: 'خطأ في الخادم.' });
     }
 });
 
 router.post('/login', (req, res) => {
-    const { username, password } = req.body;
-
-    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-        if (err) return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
-        if (!user) return res.status(400).json({ error: 'بيانات الدخول غير صحيحة.' });
-
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(400).json({ error: 'بيانات الدخول غير صحيحة.' });
-
-        const token = jwt.sign({ id: user.id, username: user.username, role: user.role, can_send_messages: user.can_send_messages }, JWT_SECRET, { expiresIn: '7d' });
-        res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
-        res.json({ message: 'تم تسجيل الدخول بنجاح', role: user.role });
+    const { email, password } = req.body;
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+        if (err || !user) return res.status(400).json({ error: 'بيانات غير صحيحة.' });
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) return res.status(400).json({ error: 'بيانات غير صحيحة.' });
+        const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET);
+        res.cookie('token', token, { httpOnly: true });
+        res.json({ message: 'تم الدخول', role: user.role });
     });
 });
 
 router.post('/logout', (req, res) => {
     res.clearCookie('token');
-    res.json({ message: 'تم تسجيل الخروج.' });
+    res.json({ message: 'تم الخروج' });
 });
 
-// --- WhatsApp APIs ---
-router.post('/wa/connect', authenticateToken, async (req, res) => {
+// ── Devices ───────────────────────────────────────────────────────────────────
+router.post('/devices', authenticateToken, (req, res) => {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'اسم الجهاز مطلوب.' });
+
+    // Admin bypasses plan limits
+    if (req.user.role === 'admin') {
+        const sessionId = 'sess_' + Date.now();
+        return db.run(
+            `INSERT INTO devices (user_id, name, session_id) VALUES (?, ?, ?)`,
+            [req.user.id, name, sessionId],
+            function (err) {
+                if (err) return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
+                res.json({ message: 'تمت الإضافة', id: this.lastID });
+            }
+        );
+    }
+
+    // For regular users, check plan
+    db.get(
+        `SELECT u.plan_id, p.max_devices FROM users u JOIN plans p ON u.plan_id = p.id WHERE u.id = ?`,
+        [req.user.id],
+        (err, plan) => {
+            if (err || !plan) return res.status(500).json({ error: 'خطأ في جلب الباقة.' });
+
+            db.get(
+                `SELECT COUNT(*) as count FROM devices WHERE user_id = ?`,
+                [req.user.id],
+                (err2, row) => {
+                    if (row && row.count >= plan.max_devices) {
+                        return res.status(403).json({ error: `وصلت للحد الأقصى (${plan.max_devices} أجهزة) في باقتك. يرجى الترقية.` });
+                    }
+                    const sessionId = 'sess_' + Date.now();
+                    db.run(
+                        `INSERT INTO devices (user_id, name, session_id) VALUES (?, ?, ?)`,
+                        [req.user.id, name, sessionId],
+                        function (err3) {
+                            if (err3) return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
+                            res.json({ message: 'تمت الإضافة', id: this.lastID });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+router.post('/devices/:id/connect', authenticateToken, async (req, res) => {
     try {
-        await whatsappManager.createSession(req.user.id);
-        res.json({ message: 'جاري تهيئة الاتصال...' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        await whatsappManager.createSession(req.user.id, req.params.id);
+        res.json({ message: 'جاري التهيئة...' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 
-router.post('/wa/pairing-code', authenticateToken, async (req, res) => {
+router.post('/devices/:id/pairing', authenticateToken, async (req, res) => {
     const { phone } = req.body;
-    if (!phone) return res.status(400).json({ error: 'رقم الهاتف مطلوب.' });
+    if (!phone) return res.status(400).json({ error: 'رقم الجوال مطلوب.' });
     try {
-        const code = await whatsappManager.requestPairingCode(req.user.id, phone);
+        const code = await whatsappManager.requestPairingCode(req.user.id, req.params.id, phone);
         res.json({ code });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 
-router.post('/wa/logout', authenticateToken, async (req, res) => {
-    await whatsappManager.logout(req.user.id);
-    res.json({ message: 'تم تسجيل الخروج من الواتساب.' });
+router.post('/devices/:id/logout', authenticateToken, async (req, res) => {
+    await whatsappManager.logout(req.params.id);
+    res.json({ message: 'تم الفصل' });
 });
 
-router.get('/wa/status', authenticateToken, (req, res) => {
-    res.json({
-        status: whatsappManager.getStatus(req.user.id),
-        qr: whatsappManager.getQr(req.user.id)
+router.delete('/devices/:id', authenticateToken, async (req, res) => {
+    await whatsappManager.logout(req.params.id);
+    db.run('DELETE FROM devices WHERE id = ? AND user_id = ?', [req.params.id, req.user.id], (err) => {
+        if (err) return res.status(500).json({ error: 'خطأ في الحذف.' });
+        res.json({ message: 'تم الحذف' });
     });
 });
 
-// --- Messaging APIs ---
-router.post('/messages/send', authenticateToken, upload.single('media'), async (req, res) => {
-    const { phone, content } = req.body;
-    const file = req.file;
-    
-    db.get('SELECT can_send_messages FROM users WHERE id = ?', [req.user.id], async (err, user) => {
-        if (err || !user || user.can_send_messages === 0) {
-            return res.status(403).json({ error: 'عفواً، لا تملك صلاحية الإرسال حالياً.' });
+// ── Contacts ──────────────────────────────────────────────────────────────────
+router.post('/contacts', authenticateToken, (req, res) => {
+    const { name, phone_number, group_name } = req.body;
+    if (!phone_number) return res.status(400).json({ error: 'رقم الجوال مطلوب.' });
+    db.run(
+        `INSERT INTO contacts (user_id, name, phone_number, group_name) VALUES (?, ?, ?, ?)`,
+        [req.user.id, name || '', phone_number, group_name || 'default'],
+        function (err) {
+            if (err) return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
+            res.json({ message: 'تمت الإضافة', id: this.lastID });
         }
+    );
+});
 
-        try {
-            const mediaUrl = file ? path.resolve(file.path) : null;
-            await whatsappManager.sendMessage(req.user.id, phone, content, mediaUrl);
-            
-            // Save to history (success)
-            db.run(`INSERT INTO messages (user_id, phone_number, content, media_path, status) VALUES (?, ?, ?, ?, 'success')`,
-                [req.user.id, phone, content, file ? file.filename : null]);
-                
-            res.json({ success: true, message: 'تم الإرسال بنجاح.' });
-        } catch (error) {
-            // Save to history (failed)
-            db.run(`INSERT INTO messages (user_id, phone_number, content, media_path, status, error_message) VALUES (?, ?, ?, ?, 'failed', ?)`,
-                [req.user.id, phone, content, file ? file.filename : null, error.message]);
-                
-            res.status(500).json({ error: 'فشل الإرسال: ' + error.message });
+router.delete('/contacts/:id', authenticateToken, (req, res) => {
+    db.run('DELETE FROM contacts WHERE id = ? AND user_id = ?', [req.params.id, req.user.id], (err) => {
+        if (err) return res.status(500).json({ error: 'خطأ في الحذف.' });
+        res.json({ message: 'تم الحذف' });
+    });
+});
+
+// ── Campaigns ─────────────────────────────────────────────────────────────────
+router.post('/campaigns', authenticateToken, upload.single('media'), (req, res) => {
+    const { name, device_id, message_content, group_name } = req.body;
+    if (!name || !device_id || !message_content) return res.status(400).json({ error: 'جميع الحقول مطلوبة.' });
+    const media_url = req.file ? `/uploads/${req.file.filename}` : null;
+
+    db.run(
+        `INSERT INTO campaigns (user_id, device_id, name, message_content, media_url, status) VALUES (?, ?, ?, ?, ?, 'processing')`,
+        [req.user.id, device_id, name, message_content, media_url],
+        function (err) {
+            if (err) return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
+            const campaignId = this.lastID;
+
+            db.all(
+                `SELECT phone_number FROM contacts WHERE user_id = ? AND group_name = ?`,
+                [req.user.id, group_name || 'default'],
+                async (err2, contacts) => {
+                    if (!contacts || contacts.length === 0) {
+                        db.run(`UPDATE campaigns SET status = 'failed' WHERE id = ?`, [campaignId]);
+                        return;
+                    }
+                    for (const contact of contacts) {
+                        try {
+                            await whatsappManager.sendMessage(device_id, contact.phone_number, message_content, media_url);
+                            await new Promise(r => setTimeout(r, 2500));
+                        } catch (e) {
+                            console.error('Campaign send error:', e.message);
+                        }
+                    }
+                    db.run(`UPDATE campaigns SET status = 'completed' WHERE id = ?`, [campaignId]);
+                }
+            );
+
+            res.json({ message: 'تم إطلاق الحملة في الخلفية.', id: campaignId });
         }
+    );
+});
+
+// ── Auto Replies ──────────────────────────────────────────────────────────────
+router.post('/auto-replies', authenticateToken, upload.single('media'), (req, res) => {
+    const { device_id, keyword, reply_content } = req.body;
+    if (!device_id || !keyword || !reply_content) return res.status(400).json({ error: 'جميع الحقول مطلوبة.' });
+    const media_url = req.file ? `/uploads/${req.file.filename}` : null;
+
+    db.run(
+        `INSERT INTO auto_replies (user_id, device_id, keyword, reply_content, media_url) VALUES (?, ?, ?, ?, ?)`,
+        [req.user.id, device_id, keyword, reply_content, media_url],
+        function (err) {
+            if (err) return res.status(500).json({ error: 'خطأ في قاعدة البيانات.' });
+            res.json({ message: 'تم حفظ الرد التلقائي', id: this.lastID });
+        }
+    );
+});
+
+router.delete('/auto-replies/:id', authenticateToken, (req, res) => {
+    db.run('DELETE FROM auto_replies WHERE id = ? AND user_id = ?', [req.params.id, req.user.id], (err) => {
+        if (err) return res.status(500).json({ error: 'خطأ في الحذف.' });
+        res.json({ message: 'تم الحذف' });
     });
 });
 
-router.get('/messages/history', authenticateToken, (req, res) => {
-    db.all('SELECT * FROM messages WHERE user_id = ? ORDER BY created_at DESC', [req.user.id], (err, rows) => {
-        if (err) return res.status(500).json({ error: 'خطأ في جلب الأرشيف.' });
-        res.json(rows);
+router.patch('/auto-replies/:id/toggle', authenticateToken, (req, res) => {
+    db.run(
+        'UPDATE auto_replies SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ? AND user_id = ?',
+        [req.params.id, req.user.id],
+        (err) => {
+            if (err) return res.status(500).json({ error: 'خطأ.' });
+            res.json({ message: 'تم التحديث' });
+        }
+    );
+});
+
+// ── Admin APIs ────────────────────────────────────────────────────────────────
+router.delete('/admin/users/:id', authenticateToken, (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'غير مصرح.' });
+    const id = req.params.id;
+    db.serialize(() => {
+        db.run('DELETE FROM auto_replies WHERE user_id = ?', [id]);
+        db.run('DELETE FROM campaigns WHERE user_id = ?', [id]);
+        db.run('DELETE FROM contacts WHERE user_id = ?', [id]);
+        db.run('DELETE FROM devices WHERE user_id = ?', [id]);
+        db.run('DELETE FROM users WHERE id = ? AND role != "admin"', [id], function (err) {
+            if (err) return res.status(500).json({ error: 'خطأ في الحذف.' });
+            res.json({ message: 'تم حذف المستخدم.' });
+        });
     });
 });
 
-// --- Admin APIs ---
-router.get('/admin/users', authenticateToken, isAdmin, (req, res) => {
-    db.all("SELECT id, username, role, can_send_messages, created_at FROM users WHERE role != 'admin'", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: 'Database error.' });
-        res.json(rows);
-    });
-});
-
-router.put('/admin/users/:id/toggle-permission', authenticateToken, isAdmin, (req, res) => {
-    const { can_send_messages } = req.body;
-    db.run(`UPDATE users SET can_send_messages = ? WHERE id = ?`, [can_send_messages ? 1 : 0, req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: 'Database error.' });
-        res.json({ message: 'تم تحديث الصلاحية بنجاح.' });
-    });
-});
-
-router.delete('/admin/users/:id', authenticateToken, isAdmin, (req, res) => {
-    db.run(`DELETE FROM users WHERE id = ? AND role != 'admin'`, [req.params.id], function(err) {
-        if (err) return res.status(500).json({ error: 'Database error.' });
-        res.json({ message: 'تم حذف المستخدم بنجاح.' });
-    });
-});
-
-module.exports = { apiRoutes: router, authenticateToken };
+module.exports = { apiRoutes: router, authenticateToken, JWT_SECRET };

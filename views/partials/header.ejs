@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيزي واتس اب — منصة حملات واتساب وأتمتة الأعمال</title>
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/css/output.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Check local storage for dark mode
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-white text-gray-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
+
+<!-- Navbar -->
+<header class="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+    <div class="container mx-auto px-4 sm:px-6">
+        <div class="flex h-20 items-center justify-between gap-4">
+            <!-- Logo -->
+            <a href="/" class="flex shrink-0 items-center text-2xl font-black text-whatsapp">
+                <i class="fa-brands fa-whatsapp text-3xl ml-2"></i> إيزي واتس
+            </a>
+
+            <!-- Links -->
+            <nav class="hidden items-center gap-1 text-sm font-bold text-slate-700 dark:text-slate-200 lg:flex">
+                <a href="/#platform" class="rounded-xl px-4 py-3 transition hover:bg-slate-100 hover:text-whatsapp dark:hover:bg-white/10">المنتج</a>
+                <a href="/#solutions" class="rounded-xl px-4 py-3 transition hover:bg-slate-100 hover:text-whatsapp dark:hover:bg-white/10">الحلول</a>
+                <a href="/#pricing" class="rounded-xl px-4 py-3 transition hover:bg-slate-100 hover:text-whatsapp dark:hover:bg-white/10">الأسعار</a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2">
+                <button id="theme-toggle" class="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:border-whatsapp hover:text-whatsapp dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-yellow-400"></i>
+                </button>
+
+                <% if(typeof user === 'undefined' || !user) { %>
+                <a href="/login" class="hidden items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black text-slate-700 transition hover:text-whatsapp dark:text-slate-200 lg:inline-flex">
+                    <i class="fa-regular fa-circle-user text-base"></i> دخول
+                </a>
+                <a href="/#pricing" class="hidden rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-700/15 transition hover:-translate-y-0.5 hover:bg-whatsappLight lg:inline-flex">
+                    ابدأ الآن
+                </a>
+                <% } else { %>
+                <a href="/dashboard" class="hidden rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-700/15 transition hover:-translate-y-0.5 hover:bg-whatsappLight lg:inline-flex">
+                    لوحة التحكم
+                </a>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</header>
+<div class="pt-20"></div>
+
+<script>
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        if(document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+    });
+</script>
